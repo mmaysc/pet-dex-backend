@@ -29,33 +29,37 @@ func (c *PetUseCase) FindByID(ID uniqueEntityId.ID) (*entity.Pet, error) {
 	return pet, nil
 }
 
-func (c *PetUseCase) Update(petID string, userID string, petUpdateDto dto.PetUpdatetDto) (err error) {
-	petToUpdate := petUpdateDto.ToEntity()
+func (c *PetUseCase) Update(petID string, userID string, petUpdateDto dto.PetUpdateDto) (err error) {
+	petToUpdate := entity.ToEntity(&petUpdateDto)
 
 	if !c.isValidPetSize(petToUpdate) {
 		return errors.New("the animal size is invalid")
 	}
 
-	if !c.isValideSpecialCare(petToUpdate) {
+	if !c.isValidSpecialCare(petToUpdate) {
 		return errors.New("failed to update special care")
+	}
+
+	if !c.isValidWeight(petToUpdate) {
+		return errors.New("the animal weight is invalid")
 	}
 
 	err = c.repo.Update(petID, userID, petToUpdate)
 	if err != nil {
 		loggerUpdate.Error("error updating pet", err)
-		return fmt.Errorf("failed to update for pet with ID %s: %w", petID, err)
+		return fmt.Errorf("failed to update pet with ID %s: %w", petID, err)
 	}
 
 	return nil
 }
 
 func (c *PetUseCase) isValidPetSize(petToUpdate *entity.Pet) bool {
-	var size = petToUpdate.Size
+	return (petToUpdate.Size == "small" || petToUpdate.Size == "medium" || petToUpdate.Size == "large" || petToUpdate.Size == "giant")
+}
 
-	if size != "" {
-		return (petToUpdate.Size == "small" || petToUpdate.Size == "medium" || petToUpdate.Size == "large" || petToUpdate.Size == "giant")
-	}
-	return true
+func (c *PetUseCase) isValidWeight(petToUpdate *entity.Pet) bool {
+	return (petToUpdate.Weight > 0 &&
+		(petToUpdate.WeightMeasure == "kg" || petToUpdate.WeightMeasure == "lb"))
 }
 
 func (c *PetUseCase) ListUserPets(userID uniqueEntityId.ID) ([]*entity.Pet, error) {
@@ -67,7 +71,7 @@ func (c *PetUseCase) ListUserPets(userID uniqueEntityId.ID) ([]*entity.Pet, erro
 	return pets, nil
 }
 
-func (c *PetUseCase) isValideSpecialCare(petToUpdate *entity.Pet) bool {
+func (c *PetUseCase) isValidSpecialCare(petToUpdate *entity.Pet) bool {
 	var needed = petToUpdate.NeedSpecialCare.Needed
 	var description = petToUpdate.NeedSpecialCare.Description
 

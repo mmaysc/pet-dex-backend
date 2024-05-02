@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"pet-dex-backend/v2/entity/dto"
 	"pet-dex-backend/v2/pkg/uniqueEntityId"
 )
 
@@ -13,6 +14,7 @@ type Pet struct {
 	Name                string            `json:"name"`
 	Size                string            `json:"size"`
 	Weight              float64           `json:"weight"`
+	WeightMeasure       string            `json:"weight_measure"`
 	AdoptionDate        time.Time         `json:"adoption_date"`
 	Birthdate           time.Time         `json:"birthdate"`
 	Comorbidity         string            `json:"comorbidity"`
@@ -54,5 +56,36 @@ func NewPet(userId, breedId uniqueEntityId.ID, size, name string, weight float64
 		Weight:       weight,
 		AdoptionDate: *adoptionDate,
 		Birthdate:    *birthdate,
+	}
+}
+
+func ToEntity(dto *dto.PetUpdateDto) *Pet {
+	vaccines := make([]Vaccines, len(dto.Vaccines))
+	for i, v := range dto.Vaccines {
+		vaccines[i] = Vaccines{
+			Name:      v.Name,
+			Date:      v.Date,
+			DoctorCRM: v.DoctorCRM,
+		}
+	}
+	specialCare := SpecialCare{
+		Needed:      dto.NeedSpecialCare.Needed,
+		Description: dto.NeedSpecialCare.Description,
+	}
+
+	return &Pet{
+		Name:                dto.Name,
+		Size:                dto.Size,
+		Weight:              dto.Weight,
+		WeightMeasure:       dto.WeightMeasure,
+		AdoptionDate:        dto.AdoptionDate,
+		Birthdate:           dto.Birthdate,
+		Comorbidity:         dto.Comorbidity,
+		Tags:                dto.Tags,
+		Castrated:           dto.Castrated,
+		AvailableToAdoption: dto.AvailableToAdoption,
+		BreedID:             dto.BreedID,
+		Vaccines:            vaccines,
+		NeedSpecialCare:     specialCare,
 	}
 }
